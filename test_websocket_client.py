@@ -17,6 +17,13 @@ class TestWebSocketClient(unittest.TestCase):
         self.uri = "wss://test.example.com/ws"
         self.client = WebSocketClient(self.uri)
     
+    @staticmethod
+    def create_mock_websocket_connect(mock_ws):
+        """Create a mock websocket connect function."""
+        async def mock_connect_coro(uri):
+            return mock_ws
+        return mock_connect_coro
+    
     def test_initialization(self):
         """Test client initialization."""
         self.assertEqual(self.client.uri, self.uri)
@@ -27,12 +34,7 @@ class TestWebSocketClient(unittest.TestCase):
     def test_connect(self, mock_connect):
         """Test WebSocket connection."""
         mock_ws = AsyncMock()
-        
-        # Make connect return a coroutine that resolves to mock_ws
-        async def mock_connect_coro(uri):
-            return mock_ws
-        
-        mock_connect.side_effect = mock_connect_coro
+        mock_connect.side_effect = self.create_mock_websocket_connect(mock_ws)
         
         async def run_test():
             await self.client.connect()
@@ -85,12 +87,7 @@ class TestWebSocketClient(unittest.TestCase):
     def test_listen_with_callback(self, mock_connect):
         """Test listening for messages with a callback."""
         mock_ws = AsyncMock()
-        
-        # Make connect return a coroutine that resolves to mock_ws
-        async def mock_connect_coro(uri):
-            return mock_ws
-        
-        mock_connect.side_effect = mock_connect_coro
+        mock_connect.side_effect = self.create_mock_websocket_connect(mock_ws)
         
         # Simulate receiving two messages then closing
         messages = [
@@ -140,16 +137,18 @@ class TestBinanceCryptoClient(unittest.TestCase):
 class TestWebSocketClientIntegration(unittest.TestCase):
     """Integration tests for WebSocket client."""
     
+    @staticmethod
+    def create_mock_websocket_connect(mock_ws):
+        """Create a mock websocket connect function."""
+        async def mock_connect_coro(uri):
+            return mock_ws
+        return mock_connect_coro
+    
     @patch('websockets.connect')
     def test_full_workflow(self, mock_connect):
         """Test complete connect-send-receive-disconnect workflow."""
         mock_ws = AsyncMock()
-        
-        # Make connect return a coroutine that resolves to mock_ws
-        async def mock_connect_coro(uri):
-            return mock_ws
-        
-        mock_connect.side_effect = mock_connect_coro
+        mock_connect.side_effect = self.create_mock_websocket_connect(mock_ws)
         
         test_message = {"action": "subscribe"}
         response_message = {"status": "subscribed"}

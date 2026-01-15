@@ -1,6 +1,7 @@
 import asyncio
 import json
 import websockets
+from websockets.asyncio.client import ClientConnection
 from typing import Callable, Optional
 
 
@@ -18,7 +19,7 @@ class WebSocketClient:
             uri: The WebSocket URI to connect to
         """
         self.uri = uri
-        self.websocket: Optional[websockets.WebSocketClientProtocol] = None
+        self.websocket: Optional[ClientConnection] = None
         self.running = False
     
     async def connect(self):
@@ -79,10 +80,10 @@ class WebSocketClient:
         if not self.websocket:
             await self.connect()
         
-        start_time = asyncio.get_event_loop().time()
+        start_time = asyncio.get_running_loop().time()
         
         while self.running:
-            if duration and (asyncio.get_event_loop().time() - start_time) > duration:
+            if duration and (asyncio.get_running_loop().time() - start_time) > duration:
                 break
             
             message = await self.receive_message()
